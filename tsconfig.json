@@ -21,9 +21,6 @@
       "jsx": "react",
       "esModuleInterop": true,
       "skipLibCheck": true,
-      "paths": {
-        "@/*": ["./src/*"]
-      },
       "forceConsistentCasingInFileNames": true,
     }
   }

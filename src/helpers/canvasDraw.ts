@@ -1,8 +1,11 @@
-import { imageHeight, imageWidth } from "@/constants/canvasConstants";
-import { translateToType } from "@/types/canvastypes";
-import { getScale } from "@/utils/getScale";
-import { getWindowSize } from "@/utils/getWindowSize";
 import { copyToCanvas, createTempCanvas } from "./canvasHelpers";
+import {
+  getScale,
+  getWindowSize,
+  imageHeight,
+  imageWidth,
+  translateToType,
+} from "..";
 
 function drawAllImages(
   canvas: HTMLCanvasElement,

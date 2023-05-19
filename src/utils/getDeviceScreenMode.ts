@@ -1,6 +1,7 @@
-import { DIMENSIONS } from "@/constants/canvasConstants";
-
 // Add more devices here. if possible. and give scales as well. in the below function.
+
+import { DIMENSIONS } from "../constants";
+
 // this width and height represents the whole width and height of the browser.
 export function getDeviceScreenMode(width: number) {
   const isTablet =

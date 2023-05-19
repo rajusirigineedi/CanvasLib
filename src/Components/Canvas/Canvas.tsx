@@ -1,12 +1,11 @@
 // Create a canvas with canvas grid [width, height] and the canvas as [width*2, height*2]
 // hold a ref to canvas.
 
-import { drawOnCanvas } from "@/helpers/canvasDraw";
-import { useWindowSize } from "@/hooks/useWindowSize";
-import { translateToType } from "@/types/canvastypes";
-import { debounceFn } from "@/utils";
-import { getDeviceScreenMode } from "@/utils/getDeviceScreenMode";
 import React, { useEffect, useRef } from "react";
+import { debounceFn, getDeviceScreenMode } from "../../utils";
+import { translateToType } from "../../types";
+import { useWindowSize } from "../../hooks";
+import { drawOnCanvas } from "../../helpers";
 
 const debounceDraw = debounceFn(drawOnCanvas, 500);
 

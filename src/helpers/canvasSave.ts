@@ -1,10 +1,6 @@
-import {
-  DIMENSIONS,
-  imageHeight,
-  imageWidth,
-} from "@/constants/canvasConstants";
 import { createTempCanvas } from "./canvasHelpers";
 import { drawOnCanvas } from "./canvasDraw";
+import { DIMENSIONS, imageHeight, imageWidth } from "../constants";
 
 function imageDataToImageURL(imagedata?: ImageData) {
   if (!imagedata) return;

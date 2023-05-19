@@ -14,8 +14,15 @@ export default function Canvas(props: {
   bottomPickerHeight: number;
   imageList: string[];
   translateTo?: translateToType;
+  backgroundColor?: string;
 }) {
-  const { imageList, translateTo, sidePickerWidth, bottomPickerHeight } = props;
+  const {
+    imageList,
+    translateTo,
+    sidePickerWidth,
+    bottomPickerHeight,
+    backgroundColor,
+  } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [width, height] = useWindowSize();
@@ -48,20 +55,17 @@ export default function Canvas(props: {
   }, [imageList, translateTo]);
 
   return (
-    <div className="relative">
-      <div className="w-screen h-2 bg-red-700 absolute z-50 top-[49.6%]"></div>
-      <canvas
-        id="my-canvas"
-        ref={canvasRef}
-        height={canvasGridHeight}
-        width={canvasGridWidth}
-        className="bg-blue-500"
-        style={{
-          width: canvasWidth,
-          height: canvasHeight,
-        }}
-      />
-    </div>
+    <canvas
+      id="my-canvas"
+      ref={canvasRef}
+      height={canvasGridHeight}
+      width={canvasGridWidth}
+      style={{
+        width: canvasWidth,
+        height: canvasHeight,
+        backgroundColor: backgroundColor ?? "#ededed",
+      }}
+    />
   );
 }
 

@@ -9,7 +9,7 @@ import { drawOnCanvas } from "../../helpers";
 
 const debounceDraw = debounceFn(drawOnCanvas, 500);
 
-export default function Canvas(props: {
+export function Canvas(props: {
   sidePickerWidth: number;
   bottomPickerHeight: number;
   imageList: string[];

@@ -15,6 +15,7 @@ export function Canvas(props: {
   imageList: string[];
   translateTo?: translateToType;
   backgroundColor?: string;
+  heightReduce?: number;
 }) {
   const {
     imageList,
@@ -22,6 +23,7 @@ export function Canvas(props: {
     sidePickerWidth,
     bottomPickerHeight,
     backgroundColor,
+    heightReduce,
   } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -30,7 +32,8 @@ export function Canvas(props: {
   const isDesktop = getDeviceScreenMode(width).isDesktop;
 
   const canvasWidth = width - (isDesktop ? sidePickerWidth : 0);
-  const canvasHeight = height - (isDesktop ? 0 : bottomPickerHeight);
+  const canvasHeight =
+    height - (heightReduce ?? 0) - (isDesktop ? 0 : bottomPickerHeight);
 
   const canvasGridWidth = canvasWidth * 2;
   const canvasGridHeight = canvasHeight * 2;
@@ -46,7 +49,9 @@ export function Canvas(props: {
   }, [width, height]);
 
   useEffect(() => {
-    if (imageList.length === 0) return;
+    if (imageList.length === 0) return; // FIXME: this might need to go.
+    // The reason is Canvas is not getting updated if Im setting imageList as [].
+    // as a result I'm seeing the previous pant images.
     drawOnCanvas(
       canvasRef.current as HTMLCanvasElement,
       imageList,

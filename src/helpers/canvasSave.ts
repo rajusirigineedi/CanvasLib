@@ -35,3 +35,28 @@ export function saveImage(imageList: string[]) {
     return imageDataURL;
   });
 }
+
+export function saveImageBlobCompressed(
+  imageList: string[],
+  cb: (imageData: Blob | null) => void,
+  compression?: number
+) {
+  // Give some Desktop width and height so that all saved images are of same dimensions.
+  // passing undefined coz we are creating a new canvas out of nothing.
+  const { tempCanvas } = createTempCanvas(
+    undefined,
+    DIMENSIONS.DESKTOP.WIDTH * 2,
+    DIMENSIONS.DESKTOP.HEIGHT * 2
+  );
+
+  // draw all the content to the temp canvas.
+  drawOnCanvas(tempCanvas, imageList, "none", () => {
+    tempCanvas.toBlob(
+      (data) => {
+        cb(data);
+      },
+      "image/png",
+      compression ?? 0.2
+    );
+  });
+}

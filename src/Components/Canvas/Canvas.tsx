@@ -74,8 +74,9 @@ export function Canvas(props: {
   );
 }
 
-Canvas.defaultProps = {
-  sidePickerWidth: 500,
-  bottomPickerHeight: 140,
-  imageList: [],
-};
+// Default props will be removed in future release, React says this. so commenting this.
+// Canvas.defaultProps = {
+//   sidePickerWidth: 500,
+//   bottomPickerHeight: 140,
+//   imageList: [],
+// };

@@ -59,31 +59,22 @@ function drawAllImages(
   }
 }
 
-function loadAllImages(
-  canvas: HTMLCanvasElement,
-  allImages: string[],
-  translateTo: translateToType
-) {
-  let imageCount = 0; // number of loaded images;
+async function loadAllImages(allImages: string[]) {
   let resultImageArray: HTMLImageElement[] = [];
-  allImages.forEach((src) => {
+  for (let i = 0; i < allImages.length; i++) {
+    const src = allImages[i];
     const image = new Image();
     image.crossOrigin = "Anonymous";
     image.src = src;
-    image.onload = () => {
-      imageCount += 1;
-      if (imageCount === allImages.length) {
-        // have all loaded????
-        drawAllImages(canvas, resultImageArray, translateTo); // call function to start rendering
-      }
-    };
+    await image.decode();
     resultImageArray.push(image); // add loading image to images array
-  });
+  }
+  return resultImageArray;
 }
 
 // canvas.width = width * 2;
 // canvas.height = height * 2;
-export function drawOnCanvas(
+export async function drawOnCanvas(
   canvasElement: HTMLCanvasElement,
   imageList: string[],
   translateTo: translateToType,
@@ -105,8 +96,8 @@ export function drawOnCanvas(
   tempCtx?.fillRect(0, tempCanvas.height - 30, 50, 30);
   tempCtx?.fillRect(tempCanvas.width - 50, 0, 50, 30);
 
-  loadAllImages(tempCanvas, imageList, translateTo);
-
+  const resultImageArray = await loadAllImages(imageList);
+  drawAllImages(tempCanvas, resultImageArray, translateTo); // call function to start rendering
   setTimeout(() => {
     copyToCanvas(tempCanvas, canvasElement);
     onDrawComplete && onDrawComplete();

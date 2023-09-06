@@ -83,18 +83,19 @@ export async function drawOnCanvas(
   // if no canvas element. or width or height is 0 return. i.e, for the very first time it happens
   if (!canvasElement || !canvasElement.width || !canvasElement.height) return;
 
-  const { tempCanvas, tempCtx } = createTempCanvas(canvasElement);
+  const { tempCanvas } = createTempCanvas(canvasElement);
 
-  tempCtx?.fillRect(0, 0, 50, 30);
-  tempCtx?.fillRect(
-    tempCanvas.width / 2 - 25,
-    tempCanvas.height / 2 - 15,
-    50,
-    30
-  );
-  tempCtx?.fillRect(tempCanvas.width - 50, tempCanvas.height - 30, 50, 30);
-  tempCtx?.fillRect(0, tempCanvas.height - 30, 50, 30);
-  tempCtx?.fillRect(tempCanvas.width - 50, 0, 50, 30);
+  // These are helpful to find the correct dimensions for the screens. these are some rectangular dots accross screen corners.
+  // tempCtx?.fillRect(0, 0, 50, 30);
+  // tempCtx?.fillRect(
+  //   tempCanvas.width / 2 - 25,
+  //   tempCanvas.height / 2 - 15,
+  //   50,
+  //   30
+  // );
+  // tempCtx?.fillRect(tempCanvas.width - 50, tempCanvas.height - 30, 50, 30);
+  // tempCtx?.fillRect(0, tempCanvas.height - 30, 50, 30);
+  // tempCtx?.fillRect(tempCanvas.width - 50, 0, 50, 30);
 
   const resultImageArray = await loadAllImages(imageList);
   drawAllImages(tempCanvas, resultImageArray, translateTo); // call function to start rendering

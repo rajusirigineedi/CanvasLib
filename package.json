@@ -1,6 +1,6 @@
 {
   "name": "fitt-canvas",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A reusable canvas for fitt onboard and product view. ( NOT RECOMMENDED FOR EXTENSIVE USES )",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -11,7 +11,11 @@
     "build:cjs": "tsc --module commonjs --outDir dist/cjs",
     "prepare": "npm run build"
   },
-  "keywords": ["react", "typescript", "fitt-canvas"],
+  "keywords": [
+    "react",
+    "typescript",
+    "fitt-canvas"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rajusirigineedi/CanvasLib.git"

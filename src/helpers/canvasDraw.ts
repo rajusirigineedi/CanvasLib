@@ -61,14 +61,16 @@ function drawAllImages(
 
 async function loadAllImages(allImages: string[]) {
   let resultImageArray: HTMLImageElement[] = [];
+  const promiseList = [];
   for (let i = 0; i < allImages.length; i++) {
     const src = allImages[i];
     const image = new Image();
     image.crossOrigin = "Anonymous";
     image.src = src;
-    await image.decode();
+    promiseList.push(image.decode());
     resultImageArray.push(image); // add loading image to images array
   }
+  await Promise.all(promiseList);
   return resultImageArray;
 }
 

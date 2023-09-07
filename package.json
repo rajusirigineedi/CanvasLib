@@ -1,6 +1,6 @@
 {
   "name": "fitt-canvas",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "A reusable canvas for fitt onboard and product view. ( NOT RECOMMENDED FOR EXTENSIVE USES )",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",

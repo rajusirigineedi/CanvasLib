@@ -1,6 +1,6 @@
 {
   "name": "fitt-canvas",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A reusable canvas image-stacking library for real-time product customization previews.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",

@@ -1,3 +1,4 @@
+/** Breakpoint dimensions used for responsive behavior by getDeviceScreenMode. */
 export const DIMENSIONS = {
   DESKTOP: {
     SCALE: 1,
@@ -16,7 +17,4 @@ export const DIMENSIONS = {
     SCALE: 0.6,
     WIDTH: 414,
   },
-};
-
-export const imageWidth = 800;
-export const imageHeight = 1714;
+} as const;

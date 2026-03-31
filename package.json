@@ -1,7 +1,7 @@
 {
   "name": "fitt-canvas",
-  "version": "1.0.12",
-  "description": "A reusable canvas for fitt onboard and product view. ( NOT RECOMMENDED FOR EXTENSIVE USES )",
+  "version": "2.0.0",
+  "description": "A reusable canvas image-stacking library for real-time product customization previews.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/esm/index.d.ts",
@@ -31,9 +31,9 @@
     "react": ">=16"
   },
   "devDependencies": {
-    "@types/react": "^18.2.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "typescript": "^5.0.4"
   }
 }

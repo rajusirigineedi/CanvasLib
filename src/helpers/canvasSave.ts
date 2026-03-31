@@ -1,62 +1,52 @@
 import { createTempCanvas } from "./canvasHelpers";
-import { drawOnCanvas } from "./canvasDraw";
-import { DIMENSIONS, imageHeight, imageWidth } from "../constants";
+import { drawImagesOnCanvas, loadImages } from "./canvasDraw";
 
-function imageDataToImageURL(imagedata?: ImageData) {
-  if (!imagedata) return;
-  var canvas = document.createElement("canvas");
-  var ctx = canvas.getContext("2d");
-  canvas.width = imagedata.width;
-  canvas.height = imagedata.height;
-  ctx?.putImageData(imagedata, 0, 0);
-
-  return canvas.toDataURL();
-}
-
-export function saveImage(imageList: string[]) {
-  // Give some Desktop width and height so that all saved images are of same dimensions.
-  // passing undefined coz we are creating a new canvas out of nothing.
-  const { tempCanvas, tempCtx } = createTempCanvas(
-    undefined,
-    DIMENSIONS.DESKTOP.WIDTH * 2,
-    DIMENSIONS.DESKTOP.HEIGHT * 2
-  );
-  // draw all the content to the temp canvas.
-  drawOnCanvas(tempCanvas, imageList, "none", () => {
-    const imageData = tempCtx?.getImageData(
-      tempCanvas.width / 2 - imageWidth / 2,
-      tempCanvas.height / 2 - imageHeight / 2,
-      imageWidth,
-      imageHeight
-    );
-    console.log("imag data ", imageData);
-    const imageDataURL = imageDataToImageURL(imageData);
-    console.log("imageURL ", imageDataURL);
-    return imageDataURL;
+/**
+ * Renders all images at their native resolution (no zoom) and returns
+ * a data-URL string via the provided callback.
+ */
+export function saveImage(
+  imageList: string[],
+  cb: (dataUrl: string | undefined) => void,
+) {
+  loadImages(imageList).then(({ loaded }) => {
+    if (loaded.length === 0) {
+      cb(undefined);
+      return;
+    }
+    const refW = loaded[0].naturalWidth || loaded[0].width;
+    const refH = loaded[0].naturalHeight || loaded[0].height;
+    const { tempCanvas } = createTempCanvas(undefined, refW, refH);
+    drawImagesOnCanvas(tempCanvas, loaded, 1, 0.5, 0.5);
+    cb(tempCanvas.toDataURL("image/png"));
   });
 }
 
+/**
+ * Renders all images at their native resolution, then returns the full
+ * canvas as a compressed Blob via the provided callback.
+ */
 export function saveImageBlobCompressed(
   imageList: string[],
   cb: (imageData: Blob | null) => void,
-  compression?: number
+  format?: "image/png" | "image/jpeg" | "image/webp",
+  quality?: number,
 ) {
-  // Give some Desktop width and height so that all saved images are of same dimensions.
-  // passing undefined coz we are creating a new canvas out of nothing.
-  const { tempCanvas } = createTempCanvas(
-    undefined,
-    DIMENSIONS.DESKTOP.WIDTH * 2,
-    DIMENSIONS.DESKTOP.HEIGHT * 2
-  );
+  loadImages(imageList).then(({ loaded }) => {
+    if (loaded.length === 0) {
+      cb(null);
+      return;
+    }
+    const refW = loaded[0].naturalWidth || loaded[0].width;
+    const refH = loaded[0].naturalHeight || loaded[0].height;
+    const { tempCanvas } = createTempCanvas(undefined, refW, refH);
+    drawImagesOnCanvas(tempCanvas, loaded, 1, 0.5, 0.5);
 
-  // draw all the content to the temp canvas.
-  drawOnCanvas(tempCanvas, imageList, "none", () => {
-    tempCanvas.toBlob(
-      (data) => {
-        cb(data);
-      },
-      "image/png",
-      compression ?? 0.2
-    );
+    const mimeType = format ?? "image/png";
+    if (mimeType === "image/png") {
+      tempCanvas.toBlob((data) => cb(data), mimeType);
+    } else {
+      tempCanvas.toBlob((data) => cb(data), mimeType, quality ?? 0.85);
+    }
   });
 }

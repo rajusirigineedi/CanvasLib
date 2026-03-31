@@ -3,8 +3,12 @@ import { useEffect, useLayoutEffect, useState } from "react";
 const useIsomorphicEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-export function useWindowSize() {
-  const [size, setSize] = useState([0, 0]);
+/**
+ * React hook that returns the current window dimensions as `[width, height]`.
+ * Updates on window resize.
+ */
+export function useWindowSize(): [number, number] {
+  const [size, setSize] = useState<[number, number]>([0, 0]);
   useIsomorphicEffect(() => {
     function updateSize() {
       setSize([window.innerWidth, window.innerHeight]);

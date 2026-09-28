@@ -10,8 +10,10 @@ import React, { useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { getDevicePixelRatio } from "../../utils";
 import { CanvasProps, ZoomState } from "../../types";
 import { drawImagesOnCanvas, loadImages } from "../../helpers";
-
-const SETTLE_THRESHOLD = 0.002;
+import {
+  interpolateCanvasViewport,
+  isCanvasViewportSettled,
+} from "../../core";
 
 export function Canvas(props: CanvasProps) {
   const {
@@ -79,13 +81,10 @@ export function Canvas(props: CanvasProps) {
       const current = currentRef.current;
       const duration = transitionDurationRef.current;
 
-      // Lerp factor: how much of the remaining distance to cover per ~16ms frame.
-      const factor =
-        duration > 0 ? 1 - Math.pow(0.001, 16 / Math.max(duration, 1)) : 1;
-
-      current.zoom += (target.zoom - current.zoom) * factor;
-      current.focusX += (target.focusX - current.focusX) * factor;
-      current.focusY += (target.focusY - current.focusY) * factor;
+      const next = interpolateCanvasViewport(current, target, 16, duration);
+      current.zoom = next.zoom;
+      current.focusX = next.focusX;
+      current.focusY = next.focusY;
 
       drawImagesOnCanvas(
         canvas,
@@ -95,10 +94,7 @@ export function Canvas(props: CanvasProps) {
         current.focusY,
       );
 
-      const settled =
-        Math.abs(target.zoom - current.zoom) < SETTLE_THRESHOLD &&
-        Math.abs(target.focusX - current.focusX) < SETTLE_THRESHOLD &&
-        Math.abs(target.focusY - current.focusY) < SETTLE_THRESHOLD;
+      const settled = isCanvasViewportSettled(current, target);
 
       if (settled) {
         // Snap to exact target for precision.

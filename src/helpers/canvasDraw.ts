@@ -1,4 +1,5 @@
 import { copyToCanvas, createTempCanvas } from "./canvasHelpers";
+import { resolveCanvasFrame } from "../core";
 
 // ---------------------------------------------------------------------------
 // Image cache – avoids re-decoding the same URL on every draw call.
@@ -58,23 +59,17 @@ export function drawImagesOnCanvas(
   const imgNativeH = images[0].naturalHeight || images[0].height;
   if (imgNativeW === 0 || imgNativeH === 0) return;
 
-  // Contain-fit: scale image to fit inside canvas, then multiply by zoom.
-  const baseScale = Math.min(
-    canvas.width / imgNativeW,
-    canvas.height / imgNativeH,
+  const frame = resolveCanvasFrame(
+    imgNativeW,
+    imgNativeH,
+    canvas.width,
+    canvas.height,
+    { zoom, focusX, focusY },
   );
-  const scaledW = imgNativeW * baseScale * zoom;
-  const scaledH = imgNativeH * baseScale * zoom;
-
-  // Focus offset: controls which part is visible when zoomed past canvas edges.
-  // focusX/Y = 0.5 → centered. 0 → left/top edge. 1 → right/bottom edge.
-  const overflowX = Math.max(0, scaledW - canvas.width);
-  const overflowY = Math.max(0, scaledH - canvas.height);
-  const x = (canvas.width - scaledW) / 2 + overflowX * (0.5 - focusX);
-  const y = (canvas.height - scaledH) / 2 + overflowY * (0.5 - focusY);
+  if (!frame) return;
 
   for (let i = 0; i < images.length; i++) {
-    ctx.drawImage(images[i], x, y, scaledW, scaledH);
+    ctx.drawImage(images[i], frame.x, frame.y, frame.width, frame.height);
   }
 }
 

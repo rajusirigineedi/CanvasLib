@@ -1,14 +1,39 @@
 {
   "name": "fitt-canvas",
-  "version": "2.0.1",
-  "description": "A reusable canvas image-stacking library for real-time product customization previews.",
+  "version": "3.0.0",
+  "description": "Shared canvas and product-customizer engine for web and React Native.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js"
+    },
+    "./core": {
+      "types": "./dist/esm/core/index.d.ts",
+      "require": "./dist/cjs/core/index.js",
+      "default": "./dist/cjs/core/index.js"
+    },
+    "./web": {
+      "types": "./dist/esm/web/index.d.ts",
+      "require": "./dist/cjs/web/index.js",
+      "default": "./dist/cjs/web/index.js"
+    },
+    "./native": {
+      "types": "./dist/esm/native/index.d.ts",
+      "react-native": "./dist/cjs/native/index.js",
+      "require": "./dist/cjs/native/index.js",
+      "default": "./dist/cjs/native/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs",
     "build:esm": "tsc",
     "build:cjs": "tsc --module commonjs --outDir dist/cjs",
+    "test": "npm run build && node test/core.test.cjs",
     "prepare": "npm run build"
   },
   "keywords": [
@@ -24,16 +49,43 @@
   "license": "MIT",
   "files": [
     "dist",
-    "LICENSE",
+    "LICENCE",
     "README.md"
   ],
   "peerDependencies": {
-    "react": ">=16"
+    "@expo-google-fonts/epilogue": ">=0.4.0",
+    "@expo-google-fonts/manrope": ">=0.4.0",
+    "@expo-google-fonts/playfair-display": ">=0.4.0",
+    "@shopify/react-native-skia": ">=2.0.0",
+    "react": ">=16",
+    "react-native": ">=0.76"
+  },
+  "peerDependenciesMeta": {
+    "@expo-google-fonts/epilogue": {
+      "optional": true
+    },
+    "@expo-google-fonts/manrope": {
+      "optional": true
+    },
+    "@expo-google-fonts/playfair-display": {
+      "optional": true
+    },
+    "@shopify/react-native-skia": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@expo-google-fonts/epilogue": "^0.4.2",
+    "@expo-google-fonts/manrope": "^0.4.2",
+    "@expo-google-fonts/playfair-display": "^0.4.2",
+    "@shopify/react-native-skia": "2.6.2",
     "@types/react": "^19.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-native": "0.86.3",
     "typescript": "^5.0.4"
   }
 }

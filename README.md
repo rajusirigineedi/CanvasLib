@@ -1,14 +1,26 @@
 # fitt-canvas
 
-A reusable canvas image-stacking library for real-time product customization previews.
+A shared product-customizer and layered-image renderer for browser and React Native applications.
 
 [![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=white)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![HTML5 Canvas](https://img.shields.io/badge/HTML5%20Canvas-EDD81C?logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas)
 
-## Description
+## Architecture
 
-Pass an ordered list of image URLs and this library composites them on an HTML5 Canvas, producing a stacked product preview (e.g. a trouser with different pockets, stitching, and fabric overlays). It handles:
+The package has three supported entry points:
+
+- `fitt-canvas/core` contains platform-independent geometry, zoom animation, layer derivation, option rules, totals, and creation payload logic.
+- `fitt-canvas/web` contains the HTML Canvas renderer and browser helpers.
+- `fitt-canvas/native` contains the React Native Skia renderer and native image capture.
+
+The root `fitt-canvas` entry remains an alias for the browser API so existing web consumers continue to work.
+
+Both renderers use the same frame calculations and animation rules. Image decoding, drawing, and snapshot encoding stay inside the appropriate platform adapter.
+
+## Browser renderer
+
+Pass an ordered list of image URLs and the browser renderer composites them on an HTML Canvas. It handles:
 
 - **Dimension-agnostic** – consumer provides `width` and `height`; no hardcoded layout constants.
 - **Animated zoom & focus** – smooth spring-style transitions via `requestAnimationFrame` when `zoom`, `focusX`, or `focusY` change.
@@ -25,7 +37,7 @@ npm install fitt-canvas
 
 ## Usage
 
-### Basic
+### Basic usage
 
 ```tsx
 import { Canvas } from "fitt-canvas";
@@ -39,6 +51,12 @@ import { Canvas } from "fitt-canvas";
     "https://example.com/stitching-layer.png",
   ]}
 />;
+```
+
+The explicit browser entry is also available:
+
+```tsx
+import { Canvas } from "fitt-canvas/web";
 ```
 
 ### With zoom and animated transitions
@@ -56,7 +74,7 @@ import { Canvas } from "fitt-canvas";
 />
 ```
 
-### Canvas Props
+### Canvas props
 
 | Prop                 | Type               | Default     | Description                                                                 |
 | -------------------- | ------------------ | ----------- | --------------------------------------------------------------------------- |
@@ -74,7 +92,7 @@ import { Canvas } from "fitt-canvas";
 | `onDrawComplete`     | `() => void`       | —           | Callback after all images are drawn.                                        |
 | `onImageError`       | `(urls: string[]) => void` | —  | Callback with URLs that failed to load.                                     |
 
-### Utilities
+### Browser utilities
 
 ```ts
 import {
@@ -114,6 +132,60 @@ React hook that returns `[width, height]` of the viewport, debounced.
 #### `getDeviceScreenMode`
 
 Returns `{ isDesktop, isTablet, isMobile }` based on a width value.
+
+## React Native renderer
+
+The native entry uses `@shopify/react-native-skia`. The consuming Expo or React Native application must install compatible versions of React Native Skia and the three Hermanhood font packages declared as optional peers.
+
+```tsx
+import { useRef } from "react";
+import {
+  FittCanvas,
+  type FittCanvasHandle,
+} from "fitt-canvas/native";
+
+const canvasRef = useRef<FittCanvasHandle>(null);
+
+<FittCanvas
+  ref={canvasRef}
+  width={canvasWidth}
+  height={canvasHeight}
+  imageList={images}
+  zoom={1.6}
+  focusX={0.5}
+  focusY={-0.25}
+  monogram={selectedMonogram}
+/>;
+
+const pngBase64 = await canvasRef.current?.capturePngBase64();
+```
+
+## Shared customizer engine
+
+Builder state calculations can run in any consumer without importing either renderer:
+
+```ts
+import {
+  deriveImageList,
+  getCustomizerTotal,
+  getDisabledOptions,
+  selectGroupOption,
+  zoomPresets,
+} from "fitt-canvas/core";
+```
+
+Changes to layer selection, material substitution, option compatibility, totals, or zoom presets now ship once in this package.
+
+## Release workflow
+
+Run the contract tests before publishing:
+
+```bash
+npm test
+npm pack --dry-run
+```
+
+During local development, sibling applications can depend on `file:../CanvasLib`. For deployed applications, publish the package and replace the file dependency with the exact released version, such as `3.0.0`.
 
 ## License
 

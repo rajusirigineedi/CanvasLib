@@ -1,6 +1,6 @@
 {
   "name": "fitt-canvas",
-  "version": "3.0.1",
+  "version": "4.0.0",
   "description": "Shared canvas and product-customizer engine for web and React Native.",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",

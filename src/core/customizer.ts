@@ -8,7 +8,18 @@ export type CustomizerMaterial = {
   disabledSubElementIndices: OptionRules;
 };
 
+export type RenderLayer = {
+  requiresChoices?: Record<string, string>;
+  id: string;
+  view: number;
+  zPos: number;
+  fabricId: string;
+  shadeId: string;
+  image: string;
+};
+
 export type CustomizerSubElement = {
+  renderLayers?: RenderLayer[];
   id: OptionId;
   images?: (string | null)[];
   price?: number;
@@ -32,6 +43,7 @@ export type CustomizerMeasurement = {
 };
 
 export type CustomizerProduct = {
+  revision?: number;
   id?: string;
   basePrice: number;
   fabrics: CustomizerMaterial[];
@@ -45,11 +57,13 @@ export type CustomizerProduct = {
 };
 
 export type CreationSelection = {
+  optionId?: string;
   groupId: string;
   selectedSubElementId: number;
 };
 
 export type CustomizerCreation = {
+  builderRevision?: number;
   id?: string;
   pantId?: string;
   basePrice?: number;
@@ -87,8 +101,20 @@ function selectedRules(product: CustomizerProduct): OptionRules[] {
 export function getDisabledOptions(product: CustomizerProduct): OptionRules {
   return selectedRules(product).reduce<OptionRules>((result, rules) => {
     Object.entries(rules).forEach(([groupId, optionIds]) => {
+      const candidates =
+        groupId === "fabrics"
+          ? product.fabrics
+          : groupId === "shades"
+            ? product.shades
+            : (product.subElementGroups.find((group) => group.id === groupId)
+                ?.subElements ?? []);
+      const normalized = optionIds.map(
+        (id) =>
+          candidates.find((option) => String(option.id) === String(id))?.id ??
+          id,
+      );
       result[groupId] = Array.from(
-        new Set([...(result[groupId] ?? []), ...optionIds]),
+        new Set([...(result[groupId] ?? []), ...normalized]),
       );
     });
     return result;
@@ -145,24 +171,34 @@ export function deriveImageList(
   const applyMaterials = options.applyMaterials ?? true;
 
   return product.subElementGroups
-    .map((group) => {
+    .flatMap((group) => {
       const selectedIndex = group.selectedSubElementId;
-      if (selectedIndex === undefined || selectedIndex === -1) return null;
+      if (selectedIndex === undefined || selectedIndex === -1) return [];
       const option = group.subElements[selectedIndex];
-      return {
-        image: applyMaterials
-          ? substituteMaterial(
-              option?.images?.[view],
-              group.category === "global" ? undefined : shadeId,
-              group.category === "global" ? undefined : fabricId,
-            )
-          : option?.images?.[view] ?? null,
-        zPos: group.zPos ?? 1,
-      };
+      if (option?.renderLayers !== undefined) {
+        return option.renderLayers
+          .filter(
+            (layer) =>
+              Object.entries(layer.requiresChoices ?? {}).every(([groupId, optionId]) => {
+                const dependency = product.subElementGroups.find((g) => String(g.id) === groupId);
+                const selected = dependency?.selectedSubElementId;
+                return selected !== undefined && selected >= 0 && String(dependency?.subElements[selected]?.id) === String(optionId);
+              }) &&
+              layer.view === view &&
+              layer.fabricId === String(fabricId) &&
+              layer.shadeId === String(shadeId),
+          )
+          .map((layer) => ({ image: layer.image, zPos: layer.zPos }));
+      }
+      const image = applyMaterials
+        ? substituteMaterial(
+            option?.images?.[view],
+            group.category === "global" ? undefined : shadeId,
+            group.category === "global" ? undefined : fabricId,
+          )
+        : (option?.images?.[view] ?? null);
+      return image ? [{ image, zPos: group.zPos ?? 1 }] : [];
     })
-    .filter((layer): layer is { image: string; zPos: number } =>
-      Boolean(layer?.image),
-    )
     .sort((left, right) => left.zPos - right.zPos)
     .map((layer) => layer.image);
 }
@@ -171,7 +207,12 @@ export function getViewCount(product: CustomizerProduct): number {
   return Math.max(
     1,
     ...product.subElementGroups.flatMap((group) =>
-      group.subElements.map((option) => option.images?.length ?? 0),
+      group.subElements.map((option) =>
+        Math.max(
+          option.images?.length ?? 0,
+          ...(option.renderLayers ?? []).map((layer) => layer.view + 1),
+        ),
+      ),
     ),
   );
 }
@@ -199,17 +240,24 @@ export function applyCreation<T extends CustomizerProduct>(
         (item) => item.groupId === group.id,
       );
       if (!selected) return group;
+      const selectedIndex =
+        selected.optionId !== undefined
+          ? group.subElements.findIndex(
+              (option) => String(option.id) === selected.optionId,
+            )
+          : selected.selectedSubElementId;
+      if (selectedIndex < 0) return group;
       if (group.category !== "text") {
         return {
           ...group,
-          selectedSubElementId: selected.selectedSubElementId,
+          selectedSubElementId: selectedIndex,
         };
       }
       return {
         ...group,
-        selectedSubElementId: selected.selectedSubElementId,
+        selectedSubElementId: selectedIndex,
         subElements: group.subElements.map((option, index) =>
-          index === selected.selectedSubElementId
+          index === selectedIndex
             ? {
                 ...option,
                 record: { ...option.record, ...creation.selectedMonogram },
@@ -230,7 +278,20 @@ export function selectGroupOption<T extends CustomizerProduct>(
   const selectedGroup = product.subElementGroups.find(
     (group) => group.id === groupId,
   );
-  if (!selectedGroup) return product;
+  if (!selectedGroup || !selectedGroup.subElements[optionIndex]) return product;
+  const candidate = selectedGroup.subElements[optionIndex];
+  const otherProduct = {
+    ...product,
+    subElementGroups: product.subElementGroups.map((group) =>
+      group.id === groupId ? { ...group, selectedSubElementId: -1 } : group,
+    ),
+  };
+  if (
+    (getDisabledOptions(otherProduct)[groupId] ?? []).some(
+      (id) => String(id) === String(candidate.id),
+    )
+  )
+    return product;
   return {
     ...product,
     subElementGroups: product.subElementGroups.map((group) => {
@@ -243,7 +304,7 @@ export function selectGroupOption<T extends CustomizerProduct>(
         ),
       };
     }),
-    currentView: selectedGroup.subElements[optionIndex]?.defaultView,
+    currentView: optionPreviewView(candidate) ?? product.currentView,
     currentZoom: selectedGroup.zoom,
   } as T;
 }
@@ -267,6 +328,7 @@ export function buildCreationPayload(
     basePrice: product.basePrice,
     addOnsPrice: getAddOnTotal(product),
     creationImage,
+    builderRevision: product.revision,
     selectedFabricId: product.defaultFabricId,
     selectedShadeId: product.defaultShadeId,
     selectedMonogram: {
@@ -276,6 +338,9 @@ export function buildCreationPayload(
     },
     selectedSubElements: product.subElementGroups.map((group) => ({
       groupId: group.id,
+      optionId: String(
+        group.subElements[group.selectedSubElementId ?? 0]?.id ?? "",
+      ),
       selectedSubElementId: group.selectedSubElementId ?? 0,
     })),
     selectedMeasurements: product.measurements.map((measurement) => ({
@@ -283,4 +348,17 @@ export function buildCreationPayload(
       selectedSubElementId: measurement.selectedIndex ?? 0,
     })),
   };
+}
+
+/** Preview navigation is independent of the saved selection. */
+export function optionPreviewView(option: CustomizerSubElement): number | undefined {
+  if (Number.isInteger(option.defaultView) && option.defaultView! >= 0) return option.defaultView;
+  const views = Array.from(new Set((option.renderLayers ?? []).map(layer => layer.view)));
+  return views.length === 1 ? views[0] : undefined;
+}
+export function focusGroupPreview<T extends CustomizerProduct>(product: T, groupId: string): T {
+  const group = product.subElementGroups.find(g => g.id === groupId);
+  const option = group?.subElements[group.selectedSubElementId ?? 0];
+  if (!group || !option) return product;
+  return { ...product, currentView: optionPreviewView(option) ?? product.currentView, currentZoom: group.zoom };
 }

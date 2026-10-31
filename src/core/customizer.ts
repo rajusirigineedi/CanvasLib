@@ -2,7 +2,7 @@ export type ZoomPreset = "upper" | "lower" | "middle" | "none";
 export type OptionId = string | number;
 export type OptionRules = Record<string, OptionId[]>;
 
-export type CustomizerMaterial = {
+export type CustomizerVariant = {
   id: OptionId;
   price: number;
   disabledSubElementIndices: OptionRules;
@@ -13,8 +13,7 @@ export type RenderLayer = {
   id: string;
   view: number;
   zPos: number;
-  fabricId: string;
-  shadeId: string;
+  variantId: string;
   image: string;
 };
 
@@ -46,10 +45,8 @@ export type CustomizerProduct = {
   revision?: number;
   id?: string;
   basePrice: number;
-  fabrics: CustomizerMaterial[];
-  shades: CustomizerMaterial[];
-  defaultFabricId: number;
-  defaultShadeId: number;
+  variants: CustomizerVariant[];
+  defaultVariantId: string;
   currentView?: number;
   currentZoom?: ZoomPreset;
   measurements: CustomizerMeasurement[];
@@ -65,13 +62,12 @@ export type CreationSelection = {
 export type CustomizerCreation = {
   builderRevision?: number;
   id?: string;
-  pantId?: string;
+  productTemplateId?: string;
   basePrice?: number;
   addOnsPrice?: number;
   selectedSubElements: CreationSelection[];
   selectedMeasurements: CreationSelection[];
-  selectedFabricId: number;
-  selectedShadeId: number;
+  selectedVariantId: string;
   selectedMonogram: Record<string, string>;
   creationImage?: string;
 };
@@ -93,8 +89,7 @@ function selectedRules(product: CustomizerProduct): OptionRules[] {
   });
   return [
     ...groupRules,
-    product.fabrics[product.defaultFabricId]?.disabledSubElementIndices ?? {},
-    product.shades[product.defaultShadeId]?.disabledSubElementIndices ?? {},
+    product.variants.find(v => v.id === product.defaultVariantId)?.disabledSubElementIndices ?? {},
   ];
 }
 
@@ -102,10 +97,8 @@ export function getDisabledOptions(product: CustomizerProduct): OptionRules {
   return selectedRules(product).reduce<OptionRules>((result, rules) => {
     Object.entries(rules).forEach(([groupId, optionIds]) => {
       const candidates =
-        groupId === "fabrics"
-          ? product.fabrics
-          : groupId === "shades"
-            ? product.shades
+        groupId === "variants"
+          ? product.variants
             : (product.subElementGroups.find((group) => group.id === groupId)
                 ?.subElements ?? []);
       const normalized = optionIds.map(
@@ -129,8 +122,7 @@ export function getAddOnTotal(product: CustomizerProduct): number {
   }, 0);
   return (
     groupsTotal +
-    (product.fabrics[product.defaultFabricId]?.price ?? 0) +
-    (product.shades[product.defaultShadeId]?.price ?? 0)
+    (product.variants.find(v => v.id === product.defaultVariantId)?.price ?? 0)
   );
 }
 
@@ -138,37 +130,14 @@ export function getCustomizerTotal(product: CustomizerProduct): number {
   return product.basePrice + getAddOnTotal(product);
 }
 
-export function substituteMaterial(
-  url: string | null | undefined,
-  shadeId?: OptionId,
-  fabricId?: OptionId,
-): string | null {
-  if (!url) return null;
-  const parts = url.replace(/\/v\d+\//, "/").split("/");
-  if (parts.length >= 3) {
-    if (shadeId !== undefined) parts[parts.length - 3] = String(shadeId);
-    if (fabricId !== undefined) parts[parts.length - 2] = String(fabricId);
-  }
-  return parts.join("/").replace(/^http:\/\//, "https://");
-}
-
-export type DeriveImageListOptions = {
-  applyMaterials?: boolean;
-  fabricIndex?: number;
-  shadeIndex?: number;
-  view?: number;
-};
+export type DeriveImageListOptions = { variantId?: string; view?: number };
 
 export function deriveImageList(
   product: CustomizerProduct,
   options: DeriveImageListOptions = {},
 ): string[] {
   const view = options.view ?? product.currentView ?? 0;
-  const fabricId =
-    product.fabrics[options.fabricIndex ?? product.defaultFabricId]?.id;
-  const shadeId =
-    product.shades[options.shadeIndex ?? product.defaultShadeId]?.id;
-  const applyMaterials = options.applyMaterials ?? true;
+  const variantId = options.variantId ?? product.defaultVariantId;
 
   return product.subElementGroups
     .flatMap((group) => {
@@ -185,19 +154,11 @@ export function deriveImageList(
                 return selected !== undefined && selected >= 0 && String(dependency?.subElements[selected]?.id) === String(optionId);
               }) &&
               layer.view === view &&
-              layer.fabricId === String(fabricId) &&
-              layer.shadeId === String(shadeId),
+              layer.variantId === variantId,
           )
           .map((layer) => ({ image: layer.image, zPos: layer.zPos }));
       }
-      const image = applyMaterials
-        ? substituteMaterial(
-            option?.images?.[view],
-            group.category === "global" ? undefined : shadeId,
-            group.category === "global" ? undefined : fabricId,
-          )
-        : (option?.images?.[view] ?? null);
-      return image ? [{ image, zPos: group.zPos ?? 1 }] : [];
+      return [];
     })
     .sort((left, right) => left.zPos - right.zPos)
     .map((layer) => layer.image);
@@ -225,8 +186,7 @@ export function applyCreation<T extends CustomizerProduct>(
 
   return {
     ...product,
-    defaultFabricId: creation.selectedFabricId ?? product.defaultFabricId,
-    defaultShadeId: creation.selectedShadeId ?? product.defaultShadeId,
+    defaultVariantId: creation.selectedVariantId ?? product.defaultVariantId,
     measurements: product.measurements.map((measurement) => {
       const selected = creation.selectedMeasurements.find(
         (item) => item.groupId === measurement.id,
@@ -324,13 +284,12 @@ export function buildCreationPayload(
   const monogram = selectedMonogram(product.subElementGroups);
   return {
     id: existingId,
-    pantId: product.id,
+    productTemplateId: product.id,
     basePrice: product.basePrice,
     addOnsPrice: getAddOnTotal(product),
     creationImage,
     builderRevision: product.revision,
-    selectedFabricId: product.defaultFabricId,
-    selectedShadeId: product.defaultShadeId,
+    selectedVariantId: product.defaultVariantId,
     selectedMonogram: {
       text: monogram.text,
       font: monogram.font,

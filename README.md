@@ -1,5 +1,12 @@
 # fitt-canvas
 
+## Version 4 contract
+
+`CustomizerProduct` uses flat `variants` and a string `defaultVariantId`; `CustomizerCreation` uses `productTemplateId` and `selectedVariantId`. `RenderLayer.variantId` matches the stable source variant ID. `deriveImageList` accepts an optional `variantId` override and uses explicit render layers. Fabric/shade arrays, positional material selection, URL substitution and `substituteMaterial` were removed. Backend prices remain authoritative.
+
+This version is distributed locally to the Fitt clients. Run `npm test`, then `npm pack --pack-destination /tmp`, copy `fitt-canvas-4.0.0.tgz` to each client's `vendor/`, and update the package/lockfile dependency. No npm publication is required.
+
+
 A shared product-customizer and layered-image renderer for browser and React Native applications.
 
 [![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=white)](https://reactjs.org/)

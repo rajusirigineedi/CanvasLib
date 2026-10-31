@@ -8,7 +8,7 @@ The shared customizer and rendering library, published to npm as `fitt-canvas` (
 
 `fitt-native` and `fitt-fulfillment` install it from the npm registry. Changes here reach them only after a version bump, a publish, and a dependency update in both apps.
 
-Cross-repo knowledge lives in the sibling folder `../docs/` (index: `../docs/README.md`, entry point: `../AGENTS.md`). Read `../docs/architecture/repo-canvaslib.md` and `../.cursor/skills/fitt-builder-publishing/SKILL.md` first.
+Cross-repo knowledge lives in the sibling folder `../docs/` (index: `../docs/README.md`, entry point: `../AGENTS.md`). Read `../docs/architecture/repo-canvaslib.md` and `../.claude/skills/fitt-builder-publishing/SKILL.md` first.
 
 ## Rules specific to this repo
 
@@ -25,3 +25,5 @@ npm test   # builds dist, then runs test/core.test.cjs
 ```
 
 Add tests for any change to `deriveImageList`, `getDisabledOptions`, `selectGroupOption`, `applyCreation` or `buildCreationPayload`. The v3 `renderLayers` path is untested today.
+
+If `../docs/` does not exist, this repo was opened on its own. The shared docs and skills live in the Fitt workspace repo (the parent `fittSource/` folder). Clone that repo and run `./bootstrap.sh` to get the side-by-side layout.
